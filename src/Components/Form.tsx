@@ -3,6 +3,7 @@ import FormItem from './FormItem'
 import PizZip from "pizzip";
 import { v4 as uuid } from 'uuid';
 import DocxReader from './DocxReader';
+import DocxParser from './DocxParser';
 
 export interface formItemI {
   id: string,
@@ -12,55 +13,12 @@ export interface formItemI {
 
 export default function Form() {
 
-  function str2xml(str: string) {
-    if (str.charCodeAt(0) === 65279) {
-      // BOM sequence
-      str = str.substr(1);
-    }
-    return new DOMParser().parseFromString(str, "text/xml");
-  }
-
-  function getParagraphs(content: string) {
-    const zip = new PizZip(content);
-    const xml = str2xml(zip.files["word/document.xml"].asText());
-    const paragraphsXml = xml.getElementsByTagName("w:p");
-    const paragraphs = [];
-  
-    for (let i = 0, len = paragraphsXml.length; i < len; i++) {
-      let fullText = "";
-      const textsXml = paragraphsXml[i].getElementsByTagName("w:t");
-      for (let j = 0, len2 = textsXml.length; j < len2; j++) {
-        const textXml = textsXml[j];
-        if (textXml.childNodes) {
-          fullText += textXml.childNodes[0].nodeValue;
-        }
-      }
-      if (fullText) {
-        paragraphs.push(fullText);
-      }
-    }
-    return paragraphs;
-  }
-
-  const [file, setFile] = useState<any>()
+  const [file, setFile] = useState<File | undefined>()
   const [formItems, setFormItems] = useState<Array<formItemI>>([{
     id: uuid(),
     variable: '',
     value: '',
   }])
-
-  const handleChangeFile = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.currentTarget.files) {
-      console.log(e.currentTarget.files[0])
-      let reader = new FileReader();
-      reader.readAsBinaryString(e.currentTarget.files[0])
-
-      reader.onload = () => {
-        // console.log(getParagraphs(reader.result))
-      }
-
-    }
-  }
 
   const handleAddFormItem = (e: MouseEvent) => {
     e.preventDefault();
@@ -91,19 +49,16 @@ export default function Form() {
     }))
   }
 
+  const handleChangeFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files![0];
+    setFile(file);
+  };
 
   return (
     <>
     <section className="form pb-5">
       <div className="container">
-        <form>
-          <div className="form-group row my-3">
-            <label htmlFor="fileForm">Исходный файл</label>
-            <input type="file" className="form-control-file" id="fileForm" value={file} onChange={handleChangeFile}/>
-            <small id="fileFormHelp" className="form-text text-muted">Прикрепите исходный файл, который необходимо заполнить.</small>
-          </div>
-        </form>
-        <DocxReader/>
+        <DocxReader handleChangeFile={handleChangeFile}/>
         <form>
 
           {formItems.map((item) => {
@@ -120,7 +75,7 @@ export default function Form() {
               <button className="btn btn-info me-1 text-white" onClick={(e) => handleAddFormItem(e)}>Добавить</button>
               <button className="btn btn-danger me-1 text-white" onClick={(e) => handleDeleteLastFormItem(e)}>Удалить</button>
             </div>
-            <button type="submit" className="btn btn-primary text-white">Получить файл</button>
+            <DocxParser file={file} formItems={formItems}/>
           </div>
         </form>
       </div>

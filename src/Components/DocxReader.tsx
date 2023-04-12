@@ -1,61 +1,22 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
-import PizZip from "pizzip";
-import { DOMParser } from "@xmldom/xmldom";
+import { ChangeEvent} from "react";
 
-function str2xml(str: string) {
-  if (str.charCodeAt(0) === 65279) {
-    // BOM sequence
-    str = str.substr(1);
-  }
-  return new DOMParser().parseFromString(str, "text/xml");
-}
 
-// Get paragraphs as javascript array
-function getParagraphs(content: any) {
-  const zip = new PizZip(content);
-  const xml = str2xml(zip.files["word/document.xml"].asText());
-  const paragraphsXml = xml.getElementsByTagName("w:p");
-  const paragraphs = [];
 
-  for (let i = 0, len = paragraphsXml.length; i < len; i++) {
-    let fullText = "";
-    const textsXml = paragraphsXml[i].getElementsByTagName("w:t");
-    for (let j = 0, len2 = textsXml.length; j < len2; j++) {
-      const textXml = textsXml[j];
-      if (textXml.childNodes) {
-        fullText += textXml.childNodes[0].nodeValue;
-      }
-    }
-    if (fullText) {
-      paragraphs.push(fullText);
-    }
-  }
-  return paragraphs;
-}
+const DocxReader = ({handleChangeFile} : {
+  handleChangeFile: (event: ChangeEvent<HTMLInputElement>) => void
+}) => {
 
-const DocxReader = () => {
-  const [paragraphs, setParagraphs] = useState<Array<string>>([]);
-
-  useEffect(() => {
-    console.log(paragraphs)
-  },[paragraphs])
-
-  const onFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    const reader = new FileReader();
-    let file = event.currentTarget.files![0];
-
-    reader.onload = (e) => {
-      const content = e.target?.result;
-      const paragraphs = getParagraphs(content);
-      setParagraphs(paragraphs);
-    };
-
-    reader.onerror = (err) => console.error(err);
-
-    reader.readAsBinaryString(file);
-  };
-
-  return <input type="file" onChange={onFileUpload} name="docx-reader" />;
+  return (
+    <>
+      <form>
+        <div className="form-group row my-3">
+          <label htmlFor="fileForm">Исходный файл</label>
+          <input type="file" className="form-control-file" id="fileForm" onChange={handleChangeFile}/>
+          <small id="fileFormHelp" className="form-text text-muted">Прикрепите исходный файл, который необходимо заполнить.</small>
+        </div>
+      </form>
+    </>
+  );
 };
 
 export default DocxReader;
