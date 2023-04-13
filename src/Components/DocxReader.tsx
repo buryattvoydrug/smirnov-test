@@ -1,7 +1,5 @@
 import { ChangeEvent} from "react";
 
-
-
 const DocxReader = ({handleChangeFile} : {
   handleChangeFile: (event: ChangeEvent<HTMLInputElement>) => void
 }) => {
