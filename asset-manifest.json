@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/smirnov-test/static/css/main.ddd94082.css",
+    "main.js": "/smirnov-test/static/js/main.468ab3f8.js",
+    "static/js/787.aeb1e6f4.chunk.js": "/smirnov-test/static/js/787.aeb1e6f4.chunk.js",
+    "index.html": "/smirnov-test/index.html",
+    "main.ddd94082.css.map": "/smirnov-test/static/css/main.ddd94082.css.map",
+    "main.468ab3f8.js.map": "/smirnov-test/static/js/main.468ab3f8.js.map",
+    "787.aeb1e6f4.chunk.js.map": "/smirnov-test/static/js/787.aeb1e6f4.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.ddd94082.css",
+    "static/js/main.468ab3f8.js"
+  ]
+}
