@@ -1,8 +1,9 @@
-import { ChangeEvent, MouseEvent, useEffect, useState } from 'react'
+import { ChangeEvent, MouseEvent, useState } from 'react'
 import FormItem from './FormItem'
-import PizZip from "pizzip";
 import { v4 as uuid } from 'uuid';
 import DocxReader from './DocxReader';
+import DocxParser from './DocxParser';
+import { Button } from 'react-bootstrap';
 
 export interface formItemI {
   id: string,
@@ -12,55 +13,12 @@ export interface formItemI {
 
 export default function Form() {
 
-  function str2xml(str: string) {
-    if (str.charCodeAt(0) === 65279) {
-      // BOM sequence
-      str = str.substr(1);
-    }
-    return new DOMParser().parseFromString(str, "text/xml");
-  }
-
-  function getParagraphs(content: string) {
-    const zip = new PizZip(content);
-    const xml = str2xml(zip.files["word/document.xml"].asText());
-    const paragraphsXml = xml.getElementsByTagName("w:p");
-    const paragraphs = [];
-  
-    for (let i = 0, len = paragraphsXml.length; i < len; i++) {
-      let fullText = "";
-      const textsXml = paragraphsXml[i].getElementsByTagName("w:t");
-      for (let j = 0, len2 = textsXml.length; j < len2; j++) {
-        const textXml = textsXml[j];
-        if (textXml.childNodes) {
-          fullText += textXml.childNodes[0].nodeValue;
-        }
-      }
-      if (fullText) {
-        paragraphs.push(fullText);
-      }
-    }
-    return paragraphs;
-  }
-
-  const [file, setFile] = useState<any>()
+  const [file, setFile] = useState<File | undefined>()
   const [formItems, setFormItems] = useState<Array<formItemI>>([{
     id: uuid(),
     variable: '',
     value: '',
   }])
-
-  const handleChangeFile = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.currentTarget.files) {
-      console.log(e.currentTarget.files[0])
-      let reader = new FileReader();
-      reader.readAsBinaryString(e.currentTarget.files[0])
-
-      reader.onload = () => {
-        // console.log(getParagraphs(reader.result))
-      }
-
-    }
-  }
 
   const handleAddFormItem = (e: MouseEvent) => {
     e.preventDefault();
@@ -91,19 +49,16 @@ export default function Form() {
     }))
   }
 
+  const handleChangeFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files![0];
+    setFile(file);
+  };
 
   return (
     <>
     <section className="form pb-5">
       <div className="container">
-        <form>
-          <div className="form-group row my-3">
-            <label htmlFor="fileForm">Исходный файл</label>
-            <input type="file" className="form-control-file" id="fileForm" value={file} onChange={handleChangeFile}/>
-            <small id="fileFormHelp" className="form-text text-muted">Прикрепите исходный файл, который необходимо заполнить.</small>
-          </div>
-        </form>
-        <DocxReader/>
+        <DocxReader handleChangeFile={handleChangeFile}/>
         <form>
 
           {formItems.map((item) => {
@@ -116,15 +71,24 @@ export default function Form() {
           })}
           
           <div className="button-group d-flex justify-content-between">
-            <div className="">
-              <button className="btn btn-info me-1 text-white" onClick={(e) => handleAddFormItem(e)}>Добавить</button>
-              <button className="btn btn-danger me-1 text-white" onClick={(e) => handleDeleteLastFormItem(e)}>Удалить</button>
+            <div>
+              <Button className="me-1" variant="info" onClick={(e) => handleAddFormItem(e)}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-plus-lg" viewBox="0 0 16 16">
+                  <path fillRule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                </svg>
+              </Button>
+              <Button className="me-1" variant="danger" onClick={(e) => handleDeleteLastFormItem(e)}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash3-fill" viewBox="0 0 16 16">
+                  <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/>
+                </svg>
+              </Button>
             </div>
-            <button type="submit" className="btn btn-primary text-white">Получить файл</button>
+            <DocxParser file={file} formItems={formItems}/>
           </div>
         </form>
       </div>
     </section>
+    
     </>
   )
 }
